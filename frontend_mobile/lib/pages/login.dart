@@ -138,6 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0.0, 40.0, 0.0, 0.0),
                       child: TextFormField(
+                        autocorrect: false,
                         maxLines: 1,
                         keyboardType: TextInputType.emailAddress,
                         autofocus: false,
@@ -157,6 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
                       child: TextFormField(
+                        autocorrect: false,
                         maxLines: 1,
                         obscureText: true,
                         autofocus: false,
