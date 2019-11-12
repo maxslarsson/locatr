@@ -4,20 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
-class MapPage extends StatefulWidget {
-  MapPage(this.latLng);
-
-  final LatLng latLng;
-
-  @override
-  _MapPageState createState() => _MapPageState(latLng);
-}
-
-class _MapPageState extends State<MapPage> {
-  _MapPageState(this.latLng);
-
-  final LatLng latLng;
-
+class MapPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,27 +17,17 @@ class _MapPageState extends State<MapPage> {
           ),
         ),
       ),
-      body: Map(null, latLng),
+      body: Map(),
     );
   }
 }
 
 class Map extends StatefulWidget {
-  Map(this.onTapFunction, this.center);
-
-  final void Function(LatLng) onTapFunction;
-  final LatLng center;
-
   @override
-  _MapState createState() => _MapState(onTapFunction, center);
+  _MapState createState() => _MapState();
 }
 
 class _MapState extends State<Map> {
-  _MapState(this.onTapFunction, this.center);
-
-  final void Function(LatLng) onTapFunction;
-  final LatLng center;
-
   CameraPosition _currentCameraPosition;
 
   Location _locationService = new Location();
@@ -76,43 +53,32 @@ class _MapState extends State<Map> {
 
     LocationData location;
 
-    if (center == null) {
-      try {
-        bool serviceStatus = await _locationService.serviceEnabled();
-        if (serviceStatus) {
-          _permission = await _locationService.requestPermission();
-          if (_permission) {
-            location = await _locationService.getLocation();
-            _currentCameraPosition = CameraPosition(
-                target: LatLng(location.latitude, location.longitude),
-                zoom: 11);
+    try {
+      bool serviceStatus = await _locationService.serviceEnabled();
+      if (serviceStatus) {
+        _permission = await _locationService.requestPermission();
+        if (_permission) {
+          location = await _locationService.getLocation();
+          _currentCameraPosition = CameraPosition(
+              target: LatLng(location.latitude, location.longitude), zoom: 11);
 
-            final GoogleMapController controller = await _controller.future;
-            controller.moveCamera(
-                CameraUpdate.newCameraPosition(_currentCameraPosition));
-          }
-        } else {
-          bool serviceStatusResult = await _locationService.requestService();
-          if (serviceStatusResult) {
-            initPlatformState();
-          }
+          final GoogleMapController controller = await _controller.future;
+          controller.moveCamera(
+              CameraUpdate.newCameraPosition(_currentCameraPosition));
         }
-      } on PlatformException catch (e) {
-        if (e.code == 'PERMISSION_DENIED') {
-          error = e.message;
-        } else if (e.code == 'SERVICE_STATUS_ERROR') {
-          error = e.message;
+      } else {
+        bool serviceStatusResult = await _locationService.requestService();
+        if (serviceStatusResult) {
+          initPlatformState();
         }
-        location = null;
       }
-    } else {
-      _currentCameraPosition = CameraPosition(
-        target: center,
-        zoom: 11,
-      );
-      final GoogleMapController controller = await _controller.future;
-      controller
-          .moveCamera(CameraUpdate.newCameraPosition(_currentCameraPosition));
+    } on PlatformException catch (e) {
+      if (e.code == 'PERMISSION_DENIED') {
+        error = e.message;
+      } else if (e.code == 'SERVICE_STATUS_ERROR') {
+        error = e.message;
+      }
+      location = null;
     }
   }
 
@@ -124,7 +90,6 @@ class _MapState extends State<Map> {
       myLocationButtonEnabled: false,
       mapToolbarEnabled: false,
       initialCameraPosition: _initialCamera,
-      onTap: onTapFunction,
       onMapCreated: (GoogleMapController controller) {
         _controller.complete(controller);
       },

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SettingsPage extends StatelessWidget {
+  FirebaseUser currentUser;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,6 +32,14 @@ class SettingsPage extends StatelessWidget {
             title: Text("This is a ListPreference"),
             subtitle: Text("Subtitle goes here"),
             onTap: () {},
+          ),
+          ListTile(
+            title: Text("Log Out User!"),
+            subtitle: Text("Temporarily for Testing"),
+            onTap: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.popUntil(context, ModalRoute.withName('/'));
+            },
           ),
         ],
       ),
