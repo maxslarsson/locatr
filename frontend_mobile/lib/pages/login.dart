@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:locatr/helpers/authentication.dart';
+
+import 'package:locatr/helpers/login/Logo.dart';
+import 'package:locatr/helpers/login/EmailField.dart';
+import 'package:locatr/helpers/login/PasswordField.dart';
+import 'package:locatr/helpers/login/LoginButton.dart';
+import 'package:locatr/helpers/login/OrBar.dart';
+import 'package:locatr/helpers/login/ErrorMessage.dart';
+import 'package:locatr/helpers/login/BottomButton.dart';
+import 'package:locatr/helpers/login/Functions.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -11,28 +18,20 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final Authentication _authentication = Authentication();
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  bool _isLoginForm = false;
+  String _errorMessage = "";
   String _email;
   String _password;
   String _userId;
-  String _errorMessage;
-  bool _isLoading;
-  bool _isLoginForm;
 
-  @override
-  void initState() {
-    _errorMessage = "";
-    _isLoading = false;
-    _isLoginForm = true;
-    super.initState();
-  }
-
-  void resetForm() {
+  void _resetForm() {
     _formKey.currentState.reset();
     _errorMessage = "";
   }
 
-  void toggleFormMode() {
-    resetForm();
+  void _toggleFormMode() {
+    _resetForm();
     setState(() {
       _isLoginForm = !_isLoginForm;
     });
@@ -42,16 +41,31 @@ class _LoginPageState extends State<LoginPage> {
     if (value.isEmpty) return 'Email is required.';
     final RegExp nameExp = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     if (!nameExp.hasMatch(value)) return 'Please enter a valid email address.';
+    _email = value.trim();
     return null;
   }
 
   String _validatePassword(String value) {
+    _password = value;
     if (value.isEmpty) return 'Password is required.';
-    if (value.length < 6) return 'A longer password is required.';
+    if (!_isLoginForm) {
+      if (value.length < 6)
+        return 'A password longer than 5 characters is required.';
+    }
     return null;
   }
 
-  void loginWithGoogle() async {
+  String _validateVerifyPassword(String value) {
+    if (value.isEmpty) return 'Password verification is required.';
+    if (!_isLoginForm) {
+      if (value.length < 6)
+        return 'A password longer than 5 characters is required.';
+    }
+    if (_password != value) return 'Passwords do not match.';
+    return null;
+  }
+
+  void _loginWithGoogle() async {
     setState(() {
       _errorMessage = "";
       _isLoading = true;
@@ -67,13 +81,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void validateAndSubmit() async {
-    setState(() {
-      _errorMessage = "";
-      _isLoading = true;
-    });
+  void _validateAndSubmit() async {
     if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
+      setState(() {
+        _errorMessage = "";
+        _isLoading = true;
+      });
       _userId = "";
       try {
         if (_isLoginForm) {
@@ -99,12 +112,6 @@ class _LoginPageState extends State<LoginPage> {
           _isLoading = false;
         });
       }
-    } else {
-      setState(() {
-        _formKey.currentState.reset();
-        _errorMessage = "Form validation error. Check your info and try again.";
-        _isLoading = false;
-      });
     }
   }
 
@@ -120,169 +127,47 @@ class _LoginPageState extends State<LoginPage> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Hero(
-                        tag: 'hero',
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0.0, 100.0, 0.0, 0.0),
-                          child: CircleAvatar(
-                            backgroundColor: Colors.transparent,
-                            radius: 75,
-                            child: Image.asset(
-                                "../assets/logos/logo_transparent.png"),
-                          ),
-                        ),
-                      ),
+                    Logo(),
+                    EmailField(validator: _validateEmail),
+                    PasswordField(
+                      validator: _validatePassword,
+                      text: "Password",
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0.0, 40.0, 0.0, 0.0),
-                      child: TextFormField(
-                        autocorrect: false,
-                        maxLines: 1,
-                        keyboardType: TextInputType.emailAddress,
-                        autofocus: false,
-                        decoration: InputDecoration(
-                          hintText: 'Email',
-                          icon: Icon(
-                            Icons.mail,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        validator: _validateEmail,
-                        onSaved: (String value) {
-                          _email = value.trim();
-                        },
+                    if (!_isLoginForm)
+                      PasswordField(
+                        validator: _validateVerifyPassword,
+                        text: "Verify Password",
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
-                      child: TextFormField(
-                        autocorrect: false,
-                        maxLines: 1,
-                        obscureText: true,
-                        autofocus: false,
-                        decoration: InputDecoration(
-                          hintText: 'Password',
-                          icon: Icon(
-                            Icons.lock,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        validator: _validatePassword,
-                        onSaved: (String value) {
-                          _password = value.trim();
-                        },
-                      ),
-                    ),
-                    Padding(
+                    LoginButton(
+                      onPressed: _validateAndSubmit,
+                      text: _isLoginForm ? 'Login' : 'Create account',
                       padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, 0.0),
-                      child: SizedBox(
-                        height: 40.0,
-                        width: double.infinity,
-                        child: RaisedButton(
-                          elevation: 5.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                          ),
-                          color: Colors.blue,
-                          child: Text(
-                            _isLoginForm ? 'Login' : 'Create account',
-                            style: TextStyle(
-                                fontSize: 20.0,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          onPressed: validateAndSubmit,
-                        ),
-                      ),
+                      color: Colors.blue,
+                      textColor: Colors.white,
                     ),
+                    if (_isLoginForm) OrBar(),
                     if (_isLoginForm)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            HorizontalBar(),
-                            Text("OR"),
-                            HorizontalBar(),
-                          ],
-                        ),
-                      ),
-                    if (_isLoginForm)
-                      SizedBox(
-                        height: 40.0,
-                        width: double.infinity,
-                        child: RaisedButton(
-                          elevation: 5.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                          ),
-                          color: Colors.white,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset("../assets/logos/google.png"),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10.0),
-                                child: Text(
-                                  'Login with Google',
-                                  style: TextStyle(
-                                      fontSize: 20.0,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
-                          onPressed: loginWithGoogle,
-                        ),
+                      LoginButton(
+                        text: 'Login with Google',
+                        color: Colors.white,
+                        textColor: Colors.black,
+                        textPadding: EdgeInsets.only(left: 10.0),
+                        onPressed: _loginWithGoogle,
+                        children: [
+                          Image.asset("../assets/logos/google.png"),
+                        ],
                       ),
                     if (_errorMessage.length > 0 && _errorMessage != null)
-                      Text(
-                        _errorMessage,
-                        style: TextStyle(
-                          fontSize: 13.0,
-                          color: Colors.red,
-                          height: 5.0,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    Expanded(
-                      child: Align(
-                        alignment: FractionalOffset.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.all(15.0),
-                          child: FlatButton(
-                            child: Text(
-                              _isLoginForm
-                                  ? 'Create an account'
-                                  : 'Have an account? Sign in',
-                              style: TextStyle(
-                                  fontSize: 20.0, fontWeight: FontWeight.w600),
-                            ),
-                            onPressed: toggleFormMode,
-                          ),
-                        ),
-                      ),
-                    ),
+                      ErrorMessage(errorMessage: _errorMessage),
+                    BottomButton(
+                      text: _isLoginForm
+                          ? 'Create an account'
+                          : 'Have an account? Sign in',
+                      onPressed: _toggleFormMode,
+                    )
                   ],
                 ),
               ),
-      ),
-    );
-  }
-}
-
-class HorizontalBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        width: 100,
-        height: 1.0,
-        color: Colors.white.withOpacity(0.6),
       ),
     );
   }
