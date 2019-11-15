@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:locatr/helpers/authentication.dart';
 
 import 'package:locatr/helpers/login/Logo.dart';
@@ -15,11 +16,12 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final Authentication _authentication = Authentication();
+  final Functions _functions = Functions();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  bool _isLoginForm = false;
+  bool _isLoginForm = true;
   String _errorMessage = "";
   String _email;
   String _password;
@@ -121,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
       resizeToAvoidBottomPadding: false,
       body: Container(
         padding: EdgeInsets.all(16.0),
-        child: _isLoading == true
+        child: _isLoading
             ? Center(child: CircularProgressIndicator())
             : Form(
                 key: _formKey,

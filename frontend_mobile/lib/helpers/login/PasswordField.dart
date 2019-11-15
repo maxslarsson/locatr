@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class PasswordField extends StatelessWidget {
-  PasswordField({@required this.validator, @required this.text});
+  PasswordField({
+    @required this.validator,
+    @required this.text,
+  });
 
   final String Function(String) validator;
   final String text;
