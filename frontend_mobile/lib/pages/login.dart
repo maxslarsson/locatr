@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:locatr/helpers/authentication.dart';
-
 import 'package:locatr/helpers/login/Login.dart';
 import 'package:locatr/helpers/login/Signup.dart';
 import 'package:locatr/helpers/login/SharedFunctions.dart';

@@ -6,49 +6,23 @@ import 'package:locatr/helpers/login/LoginButton.dart';
 import 'package:locatr/helpers/login/OrBar.dart';
 import 'package:locatr/helpers/login/ErrorMessage.dart';
 import 'package:locatr/helpers/login/BottomButton.dart';
+import 'package:locatr/pages/home.dart';
 
 class Login extends StatelessWidget {
   Login(this.parent);
 
   final dynamic parent;
 
-  void _loginWithGoogle() async {
-    parent.setState(() {
-      parent.errorMessage = "";
-      parent.isLoading = true;
-    });
-    try {
-      parent.userId = await parent.authentication.signInWithGoogle();
-    } catch (e) {
-      parent.setState(() {
-        parent.errorMessage = e.message;
-        parent.formKey.currentState.reset();
-        parent.isLoading = false;
-      });
-    }
-  }
-
-  void _validateAndSubmit() async {
-    if (parent.formKey.currentState.validate()) {
+  @override
+  Widget build(BuildContext context) {
+    void _loginWithGoogle() async {
       parent.setState(() {
         parent.errorMessage = "";
         parent.isLoading = true;
       });
-      parent.userId = "";
       try {
-        parent.userId =
-            await parent.authentication.signIn(parent.email, parent.password);
-        print('Signed in: ${parent.userId}');
-        parent.setState(() {
-          parent.isLoading = false;
-        });
-        if (parent.userId.length > 0 &&
-            parent.userId != null &&
-            parent.isLoginForm) {
-          print("Success: ${parent.userId}");
-        }
+        parent.userId = await parent.authentication.signInWithGoogle();
       } catch (e) {
-        print('Error: $e');
         parent.setState(() {
           parent.errorMessage = e.message;
           parent.formKey.currentState.reset();
@@ -56,10 +30,39 @@ class Login extends StatelessWidget {
         });
       }
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
+    void _validateAndSubmit() async {
+      if (parent.formKey.currentState.validate()) {
+        parent.setState(() {
+          parent.errorMessage = "";
+          parent.isLoading = true;
+        });
+        parent.userId = "";
+        try {
+          parent.userId =
+              await parent.authentication.signIn(parent.email, parent.password);
+          parent.setState(() {
+            parent.isLoading = false;
+          });
+          if (parent.userId.length > 0 &&
+              parent.userId != null &&
+              parent.isLoginForm) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          }
+        } catch (e) {
+          print('Error: $e');
+          parent.setState(() {
+            parent.errorMessage = e.message;
+            parent.formKey.currentState.reset();
+            parent.isLoading = false;
+          });
+        }
+      }
+    }
+
     return Column(
       children: [
         Logo(),
