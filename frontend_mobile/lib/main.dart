@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:locatr/pages/home.dart';
 import 'package:locatr/pages/login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:locatr/helpers/authentication.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_analytics/observer.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_performance/firebase_performance.dart';
 
-void main() {
-  // Turn off when in production
-  Crashlytics.instance.enableInDevMode = true;
+void main() => runApp(App());
 
-  FlutterError.onError = Crashlytics.instance.recordFlutterError;
-
-  runApp(App());
-}
-
-class App extends StatefulWidget {
+class App extends StatelessWidget {
   @override
-  _AppState createState() => _AppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        title: 'locatr',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(fontFamily: 'Raleway', brightness: Brightness.dark),
+        home: LoginAnimation() //currentUser == null ? LoginPage() : HomePage(),
+        );
+  }
 }
 
-class _AppState extends State<App> {
-  FirebaseAnalytics analytics = FirebaseAnalytics();
-  FirebasePerformance _performance = FirebasePerformance.instance;
+class LoginAnimation extends StatefulWidget {
+  @override
+  _LoginAnimationState createState() => _LoginAnimationState();
+}
+
+class _LoginAnimationState extends State<LoginAnimation>
+    with SingleTickerProviderStateMixin {
+  AnimationController animationController;
+  Animation<double> animation;
   FirebaseUser currentUser;
   Authentication _authentication = Authentication();
 
@@ -36,25 +37,34 @@ class _AppState extends State<App> {
   }
 
   void _init() async {
-    await _performance.setPerformanceCollectionEnabled(true);
-
+    animationController =
+        AnimationController(vsync: this, duration: Duration(seconds: 3));
+    animation = animationController.drive(Tween(begin: 0, end: 0));
+    animationController.forward();
     currentUser = await _authentication.getCurrentUser();
   }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    return MaterialApp(
-      title: 'locatr',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'Raleway', brightness: Brightness.dark),
-      navigatorObservers: [
-        FirebaseAnalyticsObserver(analytics: analytics),
-      ],
-      home: currentUser == null ? LoginPage() : HomePage(),
+    return Scaffold(
+      body: Column(
+        children: [
+          Opacity(
+            opacity: animation.value,
+            child: Container(
+              color: Colors.red,
+              height: 200,
+              width: 200,
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    animationController.dispose();
   }
 }

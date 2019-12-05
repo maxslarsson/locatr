@@ -33,6 +33,7 @@ class _MapState extends State<Map> {
   Location _locationService = new Location();
 
   bool _permission = false;
+  bool _done = false;
   String error;
 
   Completer<GoogleMapController> _controller = Completer();
@@ -44,10 +45,10 @@ class _MapState extends State<Map> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    _init();
   }
 
-  void initPlatformState() async {
+  void _init() async {
     await _locationService.changeSettings(
         accuracy: LocationAccuracy.HIGH, interval: 1000);
 
@@ -60,16 +61,15 @@ class _MapState extends State<Map> {
         if (_permission) {
           location = await _locationService.getLocation();
           _currentCameraPosition = CameraPosition(
-              target: LatLng(location.latitude, location.longitude), zoom: 11);
-
-          final GoogleMapController controller = await _controller.future;
-          controller.moveCamera(
-              CameraUpdate.newCameraPosition(_currentCameraPosition));
+            target: LatLng(location.latitude, location.longitude),
+            zoom: 11,
+          );
+          _done = true;
         }
       } else {
         bool serviceStatusResult = await _locationService.requestService();
         if (serviceStatusResult) {
-          initPlatformState();
+          _init();
         }
       }
     } on PlatformException catch (e) {
@@ -85,13 +85,18 @@ class _MapState extends State<Map> {
   @override
   Widget build(BuildContext context) {
     return GoogleMap(
-      mapType: MapType.normal,
+      mapType: MapType.hybrid,
       myLocationEnabled: true,
       myLocationButtonEnabled: false,
       mapToolbarEnabled: false,
       initialCameraPosition: _initialCamera,
-      onMapCreated: (GoogleMapController controller) {
+      onMapCreated: (GoogleMapController controller) async {
         _controller.complete(controller);
+        while (!_done) {}
+        final GoogleMapController tempController = await _controller.future;
+        tempController.moveCamera(
+          CameraUpdate.newCameraPosition(_currentCameraPosition),
+        );
       },
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:locatr/pages/login.dart';
 
 class SettingsPage extends StatelessWidget {
   FirebaseUser currentUser;
@@ -38,7 +40,10 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text("Temporarily for Testing"),
             onTap: () async {
               await FirebaseAuth.instance.signOut();
-              Navigator.popUntil(context, ModalRoute.withName('/'));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
             },
           ),
         ],
